@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Bazar.BD/Bazar.BD.csproj" />
+  <Project Path="Bazar.Repositorio/Bazar.Repositorio.csproj" />
+  <Project Path="Bazar.Server/Bazar.Server.Client/Bazar.Server.Client.csproj" />
+  <Project Path="Bazar.Server/Bazar.Server/Bazar.Server.csproj" />
+  <Project Path="Bazar.Servicio/Bazar.Servicio.csproj" />
+  <Project Path="Bazar.Shared/Bazar.Shared.csproj" />
+</Solution>
