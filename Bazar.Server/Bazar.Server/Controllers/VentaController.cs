@@ -1,9 +1,12 @@
 ﻿using Bazar.BD.Datos;
 using Bazar.BD.Datos.Entity;
 using Bazar.Repositorio.Repositorios;
+using Bazar.Shared.Constantes;
 using Bazar.Shared.DTO;
 using Bazar.Shared.ENUM;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 
@@ -15,13 +18,17 @@ namespace Bazar.Server.Controllers
     {
         private readonly AppDbContext context;
         private readonly IVentaRepositorio repositorio;
+        private readonly IOutputCacheStore outputCacheStore;
+        private const string cacheKey = "ventaCacheKey";
 
         public VentaController(AppDbContext context,
                                   
-                                  IVentaRepositorio repositorio)
+                                  IVentaRepositorio repositorio,
+                                    IOutputCacheStore outputCacheStore)
         {
             this.context = context;
             this.repositorio = repositorio;
+            this.outputCacheStore = outputCacheStore;
         }
 
         [HttpGet]
@@ -57,6 +64,8 @@ namespace Bazar.Server.Controllers
         //}
 
         [HttpGet("ventas-del-dia")] //api/venta/ventas-del-dia
+        [AllowAnonymous]
+        [OutputCache(Tags = new[] { cacheKey })]
 
         public async Task<ActionResult<VentaResumenDTO>> VentaDelDia(DateTime dia)
         {
@@ -66,7 +75,7 @@ namespace Bazar.Server.Controllers
             {
                 return NotFound($"No existen ventas registradas el día {dia:dd/MM/yyyy}.");
             }
-
+            Response.Headers["Cache-Control"] = $"public,max-age={ConstantesGlobales.DuracionCacheEnSegundos}";
             return Ok(entidad);
         }
 

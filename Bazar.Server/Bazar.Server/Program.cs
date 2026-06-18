@@ -5,6 +5,7 @@ using Bazar.Server.Client.Pages;
 using Bazar.Server.Components;
 using Bazar.Server.Components.Account;
 using Bazar.Servicio.ServiciosHttp;
+using Bazar.Shared.Constantes;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,11 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 #region configura el constructor de la aplicación y sus servicios
-
+var duracionCache = ConstantesGlobales.DuracionCacheEnSegundos;
+builder.Services.AddOutputCache(op => 
+{
+    op.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(duracionCache);
+});
 
 builder.Services.AddScoped(sp =>
     new HttpClient { BaseAddress = new Uri("https://localhost:7158") });
@@ -93,7 +98,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-
+app.UseOutputCache();
 app.MapControllers();
 
 #endregion

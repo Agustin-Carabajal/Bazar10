@@ -1,9 +1,12 @@
 ﻿using Bazar.BD.Datos;
 using Bazar.BD.Datos.Entity;
 using Bazar.Repositorio.Repositorios;
+using Bazar.Shared.Constantes;
 using Bazar.Shared.DTO;
 using Bazar.Shared.ENUM;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 
@@ -15,13 +18,16 @@ namespace Bazar.Server.Controllers
     {
         private readonly AppDbContext context;
         private readonly IArticuloRepositorio repositorio;
+        private readonly IOutputCacheStore outputCacheStore;
+        private const string cacheKey = "articuloCacheKey";
 
         public ArticuloController(AppDbContext context,
-                                 
-                                  IArticuloRepositorio repositorio)
+                                    IArticuloRepositorio repositorio,
+                                    IOutputCacheStore outputCacheStore)
         {
             this.context = context;
             this.repositorio = repositorio;
+            this.outputCacheStore = outputCacheStore;
         }
 
         [HttpGet]
@@ -43,7 +49,8 @@ namespace Bazar.Server.Controllers
         }
 
         [HttpGet("listaarticulo")] //api/listaarticulo
-
+        [AllowAnonymous]
+        [OutputCache(Tags = new[] { cacheKey })]
         public async Task<ActionResult<List<ArticuloListadoDTO>>> ListaArticulo()
         {
             var articulos = await repositorio.SelecListaArticulo();
@@ -56,7 +63,7 @@ namespace Bazar.Server.Controllers
             {
                 return NotFound("No existen artículos en este momento.");
             }
-
+            Response.Headers["Cache-Control"] = $"public, max-age={ConstantesGlobales.DuracionCacheEnSegundos}";
             return Ok(articulos);
         }
 
@@ -77,6 +84,7 @@ namespace Bazar.Server.Controllers
                     EstadoRegistro = EstadoRegistro.activo
                 };
                 var id = await repositorio.Insert(entidad);
+                await outputCacheStore.EvictByTagAsync(cacheKey, default);
                 return Ok(entidad.Id);
             }
             catch (Exception e)
